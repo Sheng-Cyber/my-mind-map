@@ -1,1 +1,1 @@
-# alpha-core
+# my-mind-map
