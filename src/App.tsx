@@ -5,12 +5,25 @@ import { TopToolbar } from "./components/layout/TopToolbar";
 import { useAutoSave } from "./hooks/useAutoSave";
 import { useMindMapStore } from "./store/mindMapStore";
 
+function isEditableTarget(target: EventTarget | null) {
+  if (!(target instanceof HTMLElement)) return false;
+
+  return (
+    target.isContentEditable ||
+    target.tagName === "INPUT" ||
+    target.tagName === "TEXTAREA" ||
+    target.tagName === "SELECT"
+  );
+}
+
 export default function App() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const loadMaps = useMindMapStore((state) => state.loadMaps);
   const isLoading = useMindMapStore((state) => state.isLoading);
   const focusInitialNode = useMindMapStore((state) => state.focusInitialNode);
   const refocusSelectedNode = useMindMapStore((state) => state.refocusSelectedNode);
+  const pendingNodePosition = useMindMapStore((state) => state.pendingNodePosition);
+  const addNode = useMindMapStore((state) => state.addNode);
   const selectNodeByDirection = useMindMapStore(
     (state) => state.selectNodeByDirection,
   );
@@ -41,6 +54,14 @@ export default function App() {
         undo();
       }
       if (
+        (event.key === "Enter" || event.key === "Tab") &&
+        pendingNodePosition &&
+        !isEditableTarget(event.target)
+      ) {
+        event.preventDefault();
+        addNode();
+      }
+      if (
         event.key === "ArrowUp" ||
         event.key === "ArrowDown" ||
         event.key === "ArrowLeft" ||
@@ -58,7 +79,7 @@ export default function App() {
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [selectNodeByDirection, undo]);
+  }, [addNode, pendingNodePosition, selectNodeByDirection, undo]);
 
   if (isLoading) {
     return (

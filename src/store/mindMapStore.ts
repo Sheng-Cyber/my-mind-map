@@ -253,7 +253,7 @@ function commitCreatedNode(
   state: MindMapState,
   newNode: MindNode,
   parentNodeId: string | null,
-  options: { afterNodeId?: string } = {},
+  options: { afterNodeId?: string; reveal?: boolean } = {},
 ) {
   const newEdge =
     parentNodeId == null
@@ -292,14 +292,17 @@ function commitCreatedNode(
           ...state.nodes.slice(rootNodeIndex + 1),
         ]
       : [...state.nodes, newNode];
+  const selectedNodes = markSelected(nextNodes, newNode.id);
 
   return {
-    nodes: layoutMindMap(markSelected(nextNodes, newNode.id), edges),
+    nodes: parentNodeId
+      ? layoutMindMap(selectedNodes, edges, { packRoots: false })
+      : selectedNodes,
     edges,
     selectedNodeId: newNode.id,
     branchRootId: newNode.id,
     focusNodeId: newNode.id,
-    revealNodeId: newNode.id,
+    revealNodeId: (options.reveal ?? parentNodeId != null) ? newNode.id : null,
     pendingNodePosition: null,
     selectedEdgeIds: [],
     dirtyRevision: state.dirtyRevision + 1,
@@ -727,10 +730,8 @@ export const useMindMapStore = create<MindMapState>()((set, get) => ({
       const basePosition =
         state.pendingNodePosition ?? parentNode?.position ?? { x: 160, y: 160 };
       const newNode = createMindNode({
-          x: parentNode
-            ? basePosition.x + 210
-            : basePosition.x - DEFAULT_NODE_WIDTH / 2,
-          y: parentNode ? basePosition.y : basePosition.y - DEFAULT_NODE_HEIGHT / 2,
+        x: parentNode ? basePosition.x + 210 : basePosition.x - DEFAULT_NODE_WIDTH / 2,
+        y: parentNode ? basePosition.y : basePosition.y - DEFAULT_NODE_HEIGHT / 2,
       });
 
       return {
@@ -772,7 +773,9 @@ export const useMindMapStore = create<MindMapState>()((set, get) => ({
         Object.prototype.hasOwnProperty.call(updates, "text");
 
       return {
-        nodes: isTextOnlyUpdate ? nodes : layoutMindMap(nodes, state.edges),
+        nodes: isTextOnlyUpdate
+          ? nodes
+          : layoutMindMap(nodes, state.edges, { packRoots: false }),
         history: pushHistory(state),
         dirtyRevision: state.dirtyRevision + 1,
         saveState: "idle",
@@ -781,7 +784,7 @@ export const useMindMapStore = create<MindMapState>()((set, get) => ({
 
   reflowLayout: () =>
     set((state) => ({
-      nodes: layoutMindMap(state.nodes, state.edges),
+      nodes: layoutMindMap(state.nodes, state.edges, { packRoots: false }),
       dirtyRevision: state.dirtyRevision + 1,
       saveState: "idle",
     })),

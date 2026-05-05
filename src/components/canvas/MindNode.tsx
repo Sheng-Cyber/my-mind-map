@@ -28,6 +28,7 @@ export function MindNode({ data, id, selected }: NodeProps<MindNodeType>) {
   const focusNodeId = useMindMapStore((state) => state.focusNodeId);
   const clearFocusNode = useMindMapStore((state) => state.clearFocusNode);
   const reflowTimeoutRef = useRef<number | null>(null);
+  const skipNextBlurReflowRef = useRef(false);
   const width = data.width ?? getAutoNodeWidth(data.text);
   const height = data.height;
 
@@ -90,6 +91,11 @@ export function MindNode({ data, id, selected }: NodeProps<MindNodeType>) {
   }, [clearScheduledReflow, reflowLayout]);
 
   const flushReflow = useCallback(() => {
+    if (skipNextBlurReflowRef.current) {
+      skipNextBlurReflowRef.current = false;
+      return;
+    }
+
     clearScheduledReflow();
     reflowLayout();
   }, [clearScheduledReflow, reflowLayout]);
@@ -152,11 +158,13 @@ export function MindNode({ data, id, selected }: NodeProps<MindNodeType>) {
           if (event.key === "Enter") {
             event.preventDefault();
             clearScheduledReflow();
+            skipNextBlurReflowRef.current = true;
             addSiblingNode();
           }
           if (event.key === "Tab") {
             event.preventDefault();
             clearScheduledReflow();
+            skipNextBlurReflowRef.current = true;
             addChildNode();
           }
           if (
@@ -165,6 +173,7 @@ export function MindNode({ data, id, selected }: NodeProps<MindNodeType>) {
           ) {
             event.preventDefault();
             clearScheduledReflow();
+            skipNextBlurReflowRef.current = true;
             deleteNode(id);
           }
           if (

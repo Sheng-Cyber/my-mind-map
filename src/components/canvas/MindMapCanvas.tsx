@@ -48,7 +48,7 @@ function getRevealOffset(
     right: (node.position.x + width) * viewport.zoom + viewport.x,
     top: node.position.y * viewport.zoom + viewport.y,
   };
-  const visibleBounds = {
+  const visible = {
     bottom: canvas.height - REVEAL_MARGIN.bottom,
     left: REVEAL_MARGIN.left,
     right: canvas.width - REVEAL_MARGIN.right,
@@ -57,13 +57,13 @@ function getRevealOffset(
 
   return {
     x:
-      nodeBounds.left < visibleBounds.left
-        ? visibleBounds.left - nodeBounds.left
-        : Math.min(0, visibleBounds.right - nodeBounds.right),
+      nodeBounds.left < visible.left
+        ? visible.left - nodeBounds.left
+        : Math.min(0, visible.right - nodeBounds.right),
     y:
-      nodeBounds.top < visibleBounds.top
-        ? visibleBounds.top - nodeBounds.top
-        : Math.min(0, visibleBounds.bottom - nodeBounds.bottom),
+      nodeBounds.top < visible.top
+        ? visible.top - nodeBounds.top
+        : Math.min(0, visible.bottom - nodeBounds.bottom),
   };
 }
 

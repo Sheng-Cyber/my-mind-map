@@ -13,6 +13,10 @@ type Bounds = {
 
 type Position = { x: number; y: number };
 
+type LayoutOptions = {
+  packRoots?: boolean;
+};
+
 function getNodeWidth(node: MindNode) {
   return node.data.width ?? getAutoNodeWidth(node.data.text);
 }
@@ -21,8 +25,14 @@ function getNodeHeight(node: MindNode) {
   return node.data.height ?? node.height ?? DEFAULT_NODE_HEIGHT;
 }
 
-export function layoutMindMap(nodes: MindNode[], edges: MindEdge[]) {
+export function layoutMindMap(
+  nodes: MindNode[],
+  edges: MindEdge[],
+  options: LayoutOptions = {},
+) {
   if (nodes.length <= 1) return nodes;
+
+  const shouldPackRoots = options.packRoots ?? true;
 
   const nodeById = new Map(nodes.map((node) => [node.id, node]));
   const incoming = new Set(edges.map((edge) => edge.target));
@@ -151,7 +161,8 @@ export function layoutMindMap(nodes: MindNode[], edges: MindEdge[]) {
       height: getNodeHeight(root),
       width: getNodeWidth(root),
     };
-    const treeTop = Math.max(getTreeTopForRoot(root, rootBounds), nextTreeTop);
+    const idealTop = getTreeTopForRoot(root, rootBounds);
+    const treeTop = shouldPackRoots ? Math.max(idealTop, nextTreeTop) : idealTop;
 
     placeTree(root.id, root.position.x, treeTop);
     nextTreeTop = treeTop + rootBounds.height + TREE_GAP;
@@ -164,7 +175,8 @@ export function layoutMindMap(nodes: MindNode[], edges: MindEdge[]) {
       height: getNodeHeight(node),
       width: getNodeWidth(node),
     };
-    const treeTop = Math.max(getTreeTopForRoot(node, nodeBounds), nextTreeTop);
+    const idealTop = getTreeTopForRoot(node, nodeBounds);
+    const treeTop = shouldPackRoots ? Math.max(idealTop, nextTreeTop) : idealTop;
 
     placeTree(node.id, node.position.x, treeTop);
     nextTreeTop = treeTop + nodeBounds.height + TREE_GAP;
