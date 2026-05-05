@@ -1,1 +1,1 @@
-# my-mind-map
+# my-mindmap
